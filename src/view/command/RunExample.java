@@ -26,22 +26,27 @@ public class RunExample extends Command {
         this.logFilePath = logFilePath;
         this.displayFlag = displayFlag;
     }
+
+    public static Controller buildController(IStmt program, String logFilePath, boolean displayFlag){
+        var typeEnv = new MyDictionary<String, Type>();
+        program.typeCheck(typeEnv);
+
+        var stk = new MyStack<IStmt>();
+        var sym = new MyDictionary<String, Value>();
+        var out = new MyList<Value>();
+        var ft = new FileTable<StringValue, BufferedReader>();
+
+        PrgState prg = new PrgState(stk, sym, out, ft, program);
+        IRepository repo = new Repository(prg, logFilePath);
+        Controller ctr = new Controller(repo);
+        ctr.setDisplayFlag(displayFlag);
+        return ctr;
+    }
+
     @Override
     public void execute(){
         try{
-            var typeEnv = new MyDictionary<String, Type>();
-            program.typeCheck(typeEnv);
-
-            var stk = new MyStack<IStmt>();
-            var sym = new MyDictionary<String, Value>();
-            var out = new MyList<Value>();
-            var ft = new FileTable<StringValue, BufferedReader>();
-
-            PrgState prg = new PrgState(stk, sym, out, ft, program);
-            IRepository repo = new Repository(prg, logFilePath);
-            Controller ctr = new Controller(repo);
-            ctr.setDisplayFlag(displayFlag.get());
-
+            Controller ctr = buildController(program, logFilePath, displayFlag.get());
             ctr.allStep();
         }catch(Exception e){
             System.out.println(e.getMessage());

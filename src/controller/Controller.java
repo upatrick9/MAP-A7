@@ -66,67 +66,73 @@ public class Controller implements IController{
 
 
 
-    private void oneStepForAllPrg(List<PrgState> prgList) {
-        prgList.forEach(prg -> repo.logPrgStateExec(prg));
-
-        List<Callable<PrgState>> callList = prgList.stream()
-                .map((PrgState p) -> (Callable<PrgState>) p::oneStep)
-                .collect(Collectors.toList());
-
-        List<PrgState> newPrgList;
+    public void oneStepForAllPrg(List<PrgState> prgList) {
+        // Important: manage executor here since this is now public and called from GUI
+        executor = Executors.newFixedThreadPool(2);
         try {
-            newPrgList = executor.invokeAll(callList).stream()
-                    .map(future -> {
-                        try {
-                            return future.get();
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                            throw new MyException("Interrupted: " + e.getMessage());
-                        } catch (ExecutionException e) {
-                            throw new MyException("Execution error: " + e.getCause().getMessage());
-                        }
-                    })
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new MyException("Interrupted while invoking all: " + e.getMessage());
-        }
+            prgList.forEach(prg -> repo.logPrgStateExec(prg));
 
-        prgList.addAll(newPrgList);
-
-        if (!prgList.isEmpty()) {
-            MyIHeap<Value> heap = prgList.getFirst().getHeap();
-            List<Integer> symTableAddr = prgList.stream()
-                    .flatMap(p -> getAddrFromSymTable(p.getSymTable().getContent().values()).stream())
-                    .distinct()
+            List<Callable<PrgState>> callList = prgList.stream()
+                    .map((PrgState p) -> (Callable<PrgState>) p::oneStep)
                     .collect(Collectors.toList());
 
-            heap.setContent(safeGarbageCollector(symTableAddr, heap.getContent()));
+            List<PrgState> newPrgList;
+            try {
+                newPrgList = executor.invokeAll(callList).stream()
+                        .map(future -> {
+                            try {
+                                return future.get();
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                                throw new MyException("Interrupted: " + e.getMessage());
+                            } catch (ExecutionException e) {
+                                throw new MyException("Execution error: " + e.getCause().getMessage());
+                            }
+                        })
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new MyException("Interrupted while invoking all: " + e.getMessage());
+            }
+
+            prgList.addAll(newPrgList);
+
+            if (!prgList.isEmpty()) {
+                MyIHeap<Value> heap = prgList.getFirst().getHeap();
+                List<Integer> symTableAddr = prgList.stream()
+                        .flatMap(p -> getAddrFromSymTable(p.getSymTable().getContent().values()).stream())
+                        .distinct()
+                        .collect(Collectors.toList());
+
+                heap.setContent(safeGarbageCollector(symTableAddr, heap.getContent()));
+            }
+
+            prgList.forEach(prg -> repo.logPrgStateExec(prg));
+
+            if (displayFlag) {
+                prgList.forEach(System.out::println);
+            }
+
+            repo.setPrgList(prgList);
+        } finally {
+            executor.shutdownNow();
         }
-
-        prgList.forEach(prg -> repo.logPrgStateExec(prg));
-
-        if (displayFlag) {
-            prgList.forEach(System.out::println);
-        }
-
-        repo.setPrgList(prgList);
     }
 
     @Override
     public void allStep() throws MyException {
-        executor = Executors.newFixedThreadPool(2);
-
         List<PrgState> prgList = removeCompletedPrg(repo.getPrgList());
         while (!prgList.isEmpty()) {
             oneStepForAllPrg(prgList);
             prgList = removeCompletedPrg(repo.getPrgList());
         }
+    }
 
-        executor.shutdownNow();
 
-        repo.setPrgList(prgList);
+    @Override
+    public List<PrgState> getPrgList() {
+        return repo.getPrgList();
     }
 
 }

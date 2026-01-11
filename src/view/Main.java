@@ -1,11 +1,14 @@
 package view;
 
+import GUI.ProgramSelectionUI;
+import javafx.application.Application;
 import models.expressions.*;
 import models.statements.*;
 import models.types.*;
 import models.values.*;
 import view.command.*;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Main {
@@ -148,17 +151,19 @@ public class Main {
                         new AssignStmt("v", new ValueExp(new BoolValue(true)))
                 );
 
-        TextMenu menu = new TextMenu();
-        menu.addCommand(new ExitCommand("0", "exit"));
-        menu.addCommand(new SetDisplayCommand("d", "toggle display (1.On / 2.Off)", displayFlag));
-        menu.addCommand(new RunExample("1", ex1.toString(), ex1, "log1.txt", displayFlag));
-        menu.addCommand(new RunExample("2", ex2.toString(), ex2, "log2.txt", displayFlag));
-        menu.addCommand(new RunExample("3", ex3.toString(), ex3, "log3.txt", displayFlag));
-        menu.addCommand(new RunExample("4", ex4.toString(), ex4, "log4.txt", displayFlag));
-        menu.addCommand(new RunExample("5", ex5.toString(), ex5, "log5.txt", displayFlag));
-        menu.addCommand(new RunExample("6", ex6.toString(), ex6, "log6.txt", displayFlag));
-        menu.addCommand(new RunExample("7", ex7.toString(), ex7, "log7.txt", displayFlag));
-        menu.addCommand(new RunExample("8", ex8.toString(), ex8, "log8.txt", displayFlag));
-        menu.show();
+        List<ProgramSelectionUI.Example> examples = List.of(
+                new ProgramSelectionUI.Example(ex1.toString(), ex1, "log1.txt"),
+                new ProgramSelectionUI.Example(ex2.toString(), ex2, "log2.txt"),
+                new ProgramSelectionUI.Example(ex3.toString(), ex3, "log3.txt"),
+                new ProgramSelectionUI.Example(ex4.toString(), ex4, "log4.txt"),
+                new ProgramSelectionUI.Example(ex5.toString(), ex5, "log5.txt"),
+                new ProgramSelectionUI.Example(ex6.toString(), ex6, "log6.txt"),
+                new ProgramSelectionUI.Example(ex7.toString(), ex7, "log7.txt"),
+                new ProgramSelectionUI.Example(ex8.toString(), ex8, "log8.txt")
+        );
+
+        ProgramSelectionUI.setExamples(examples);
+
+        Application.launch(ProgramSelectionUI.class, args);
     }
 }
