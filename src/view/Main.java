@@ -125,6 +125,8 @@ public class Main {
                                                 new CompStmt(
                                                         new forkStmt(
                                                                 new CompStmt(
+                                                                new VarDeclStmt("b", new RefType(new IntType())),
+                                                                new CompStmt(
                                                                         new WriteHeapStmt("a", new ValueExp(new IntValue(30))),
                                                                         new CompStmt(
                                                                                 new AssignStmt("v", new ValueExp(new IntValue(32))),
@@ -133,6 +135,7 @@ public class Main {
                                                                                         new PrintStmt(new ReadHeapExp(new VarExp("a")))
                                                                                 )
                                                                         )
+                                                                )
                                                                 )
                                                         ),
                                                         new CompStmt(

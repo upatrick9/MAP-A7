@@ -141,5 +141,8 @@ public class MainUI {
             topFirst.add(String.valueOf(stack.get(i)));
         }
         exeStackList.setItems(FXCollections.observableArrayList(topFirst));
+        symTable.setItems(FXCollections.observableArrayList(selected.getSymTable().getContent().entrySet()));
+        symTable.refresh();
+
     }
 }
