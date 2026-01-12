@@ -65,7 +65,7 @@ public class MainUI {
 
         VBox left = new VBox(
                 new Label("PrgState IDs"), prgIdList,
-                new Label("ExeStack (top first)"), exeStackList
+                new Label("ExeStack"), exeStackList
         );
 
         VBox center = new VBox(
